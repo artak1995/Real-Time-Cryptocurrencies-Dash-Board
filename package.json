@@ -1,0 +1,17 @@
+{
+  "name": "plum-challenge",
+  "version": "1.0.0",
+  "description": "cryptocurrencies price in real time",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "billy",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "concurrently": "^3.6.0",
+    "express": "^4.16.3",
+    "socket.io": "^2.1.1"
+  }
+}
