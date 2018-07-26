@@ -26,56 +26,58 @@ io.on("connection", socket => {
 });
 
 const APIinstance = axios.create({
-    baseURL: 'https://api.cryptonator.com/api/ticker/'
+    baseURL: 'https://api.cryptonator.com/api/ticker/',
+    maxRedirects: 25,
+    headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+    }
   });
-  
+var resObj; 
+
+global.btcBuffer , global.ethBuffer, global.ltcBuffer;
+
 const getApiAndEmit =  socket => {
   try {
-    const res =  APIinstance.get('/btc-usd', {
-        maxRedirects: 25,
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
+    axios.all([
+      axios.get('https://api.cryptonator.com/api/ticker/btc-usd', {maxRedirects: 30, headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',}}),
+      axios.get('https://api.cryptonator.com/api/ticker/eth-usd', {maxRedirects: 30, headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',}}),
+      axios.get('https://api.cryptonator.com/api/ticker/ltc-usd', {maxRedirects: 30, headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',}}),      
+      ])
+      .then(axios.spread((btcRes, ethRes, ltcRes) => {
+        if (btcRes.data.ticker){
+          btcBuffer = btcRes.data.ticker;
         }
-    })
-        .then(function (response) {
-            // handle success
-            console.log('API CALL');  
-            if (response.data.ticker != undefined)     
-                socket.emit("FromAPI", response.data);
-            console.log(response.data);
-            
-        })
+        if (ethRes.data.ticker){
+          ethBuffer = ethRes.data.ticker;
+        }
+        if (ltcRes.data.ticker){
+          ltcBuffer = ltcRes.data.ticker;
+        }
+        resObj = { btc: btcRes.data.ticker , eth: ethRes.data.ticker, ltc: ltcRes.data.ticker};
+        socket.broadcast.emit("FromAPI", resObj);
+        console.log(btcBuffer);
+        console.log(ethBuffer);
+        console.log(ltcBuffer);
+        console.log(resObj);
+        }))
         .catch(function (error) {
             // handle error
             console.log("Erron in API CALL");
             console.log(error);
         })
-        .then(function () {
-            // always executed
-            console.log('AFTER API CALL');
-        });
-    // socket.emit("FromAPI", res.data);
+
     console.log('END OF TRY BLOCK');
   } catch (error) {
     console.log('Reached here2');
     console.error(`Error: ${error.code}`);
   }
 };
-
-
-// const res = axios.get('https://api.cryptonator.com/api/ticker/btc-usd')
-//   .then(function (response) {
-//     // handle success
-//     console.log(response.data);
-//   })
-//   .catch(function (error) {
-//     // handle error
-//     console.log(error);
-//   })
-//   .then(function () {
-//     // always executed
-//     console.log('run');
-//   });
 
 server.listen(port, () => console.log(`Listening on port ${port}`));
